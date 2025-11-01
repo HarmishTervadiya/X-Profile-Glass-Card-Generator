@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 // Import Components
 import BlogAnnouncement from './components/BlogAnnouncement';
 import DownloadButton from './components/DownloadButton';
-import LoadingSpinner from './components/LoadingSpinner';
+// import LoadingSpinner from './components/LoadingSpinner';
 import MaintenanceMode from './components/MaintenanceMode';
 import Footer from './components/Footer';
 
@@ -14,8 +14,8 @@ function App() {
   
   // Add types to our state hooks
   const [generatedCard, setGeneratedCard] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [loadingText, setLoadingText] = useState<string>('');
+  // const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const [loadingText, setLoadingText] = useState<string>('');
 
   if (isMaintenanceMode) {
     return <MaintenanceMode />;
@@ -56,10 +56,10 @@ function App() {
         </header>
 
         {/* Blog Post Announcement */}
-        {!isLoading && !generatedCard && <BlogAnnouncement />}
+        <BlogAnnouncement />
 
         {/* Loading State */}
-        {isLoading && <LoadingSpinner text={loadingText} />}
+        {/* {isLoading && <LoadingSpinner text={loadingText} />} */}
 
         {/* Download Section */}
         {generatedCard && (
