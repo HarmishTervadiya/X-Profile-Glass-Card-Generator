@@ -44,55 +44,112 @@ function ImageUpload({ onImageUpload, disabled = false }: ImageUploadProps) {
   };
 
   const handlePaste = async () => {
-    if (disabled) return;
-    
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      
-      for (const item of clipboardItems) {
-        const imageTypes = item.types.filter(type => type.startsWith('image/'));
-        
-        if (imageTypes.length > 0) {
-          const blob = await item.getType(imageTypes[0]);
-          
-          // Validate file size (max 10MB)
-          if (blob.size > 10 * 1024 * 1024) {
-            alert('Image size must be less than 10MB');
-            return;
-          }
-          
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-              onImageUpload(reader.result);
-            }
-          };
-          reader.readAsDataURL(blob);
-          return;
-        }
-      }
-      
-      alert('No image found in clipboard. Please copy an image first.');
-    } catch (err) {
-      console.error('Paste error:', err);
-      alert('Unable to paste image. Please try uploading instead or ensure you have copied an image.');
+    // This is now handled by the ClipboardEvent listener
+    // Keeping this function for the button click handler
+    alert('Please use Ctrl+V to paste, or click "Upload File" to select an image.');
+  };
+
+  const processImageFile = (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please paste a valid image file (PNG or JPEG)');
+      return false;
     }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size must be less than 10MB');
+      return false;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        onImageUpload(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    return true;
   };
 
   // Check clipboard API support and add global paste listener
   useEffect(() => {
     setPasteSupported('clipboard' in navigator && 'read' in navigator.clipboard);
     
-    // Global Ctrl+V listener
-    const handleGlobalPaste = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !disabled) {
-        e.preventDefault();
-        handlePaste();
+    // Universal paste handler using ClipboardEvent (works for both file copies and screenshots)
+    const handleClipboardPaste = async (e: ClipboardEvent) => {
+      if (disabled) return;
+      
+      let handled = false;
+      
+      // First, try to get files from clipboardData (works for copied files)
+      const items = e.clipboardData?.items;
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          
+          // Handle image files and blobs
+          if (item.kind === 'file' && item.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = item.getAsFile();
+            
+            if (file && processImageFile(file)) {
+              handled = true;
+              return;
+            }
+          }
+        }
+      }
+      
+      // If no files found, try Clipboard API (works for screenshots and web images)
+      if (!handled) {
+        try {
+          const clipboardItems = await navigator.clipboard.read();
+          
+          for (const item of clipboardItems) {
+            const imageTypes = item.types.filter(type => type.startsWith('image/'));
+            
+            if (imageTypes.length > 0) {
+              e.preventDefault();
+              const blob = await item.getType(imageTypes[0]);
+              
+              // Convert blob to file for consistent processing
+              const file = new File([blob], 'pasted-image.png', { type: blob.type });
+              
+              if (processImageFile(file)) {
+                handled = true;
+                return;
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Clipboard API error:', err);
+          
+          // Provide user-friendly error messages
+          const errorMessage = err instanceof Error ? err.message.toLowerCase() : '';
+          
+          if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('exceeded') || errorMessage.includes('429')) {
+            alert('We\'re unable to process pasted files right now. Please upload your file manually or try again after a few minutes — our servers are currently busy.');
+          } else if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorMessage.includes('not allowed')) {
+            alert('Clipboard access was denied. Please check your browser permissions or use the upload button instead.');
+          } else if (errorMessage.includes('not supported') || errorMessage.includes('not available')) {
+            alert('Paste is not supported in your browser. Please use the upload button to select your file.');
+          }
+          return;
+        }
+      }
+      
+      // If nothing was handled, show appropriate message
+      if (!handled) {
+        alert('No image found in clipboard. Please copy an image or use the upload button.');
       }
     };
     
-    window.addEventListener('keydown', handleGlobalPaste);
-    return () => window.removeEventListener('keydown', handleGlobalPaste);
+    window.addEventListener('paste', handleClipboardPaste);
+    
+    return () => {
+      window.removeEventListener('paste', handleClipboardPaste);
+    };
   }, [disabled]);
 
   return (
@@ -107,7 +164,7 @@ function ImageUpload({ onImageUpload, disabled = false }: ImageUploadProps) {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-bold text-black">Upload or Paste Screenshot</h3>
               <p className="text-sm text-gray-600 max-w-md">
-                Upload or paste (Ctrl+V) a screenshot of an X (Twitter) profile page. Dark mode screenshots work best.
+                Upload or paste (Ctrl+V) a screenshot of your profile page. Dark mode screenshots work best.
               </p>
             </div>
             

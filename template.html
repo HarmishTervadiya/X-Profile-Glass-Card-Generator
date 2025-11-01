@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=682, height=1024" />
+  <style>
+    :root{
+      --w: 682px;
+      --h: 1024px;
+      --card-w: 420px; /* tuned for layout, can adjust */
+      --card-h: 620px;
+      --bg: #0b0b0b;
+      --glass-bg: rgba(10,10,10,0.44);
+      --text: #fff;
+      --accent1: #ff8a65; /* orange */
+      --accent2: #8a65ff; /* purple */
+      --accent3: #00aaff; /* twitter-ish blue */
+      --padding: 22px;
+      --radius: 22px;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .frame{
+      width:var(--card-w);
+      height:var(--card-h);
+      border-radius:var(--radius);
+      position:relative;
+      padding: var(--padding);
+      box-sizing:border-box;
+      /* translucent glass */
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow:hidden;
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+    }
+    /* neon rim using pseudo element */
+    .frame::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:2px;
+      pointer-events:none;
+      background:
+        linear-gradient(135deg, var(--accent1), var(--accent2));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    /* inner content area to add inner dark overlay for legibility */
+    .inner{
+      position:relative;
+      z-index:2;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      height:100%;
+    }
+    .top{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .avatar{
+      width:84px;
+      height:84px;
+      border-radius:50%;
+      overflow:hidden;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      border:2px solid rgba(255,255,255,0.08);
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .name-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .name{
+      font-weight:700;
+      font-size:28px;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .verified {
+      width:22px; height:22px; display:inline-block;
+      transform:translateY(1px);
+    }
+    .username{
+      color:rgba(255,255,255,0.8);
+      font-weight:500;
+      font-size:15px;
+    }
+    .bio{
+      color:rgba(255,255,255,0.9);
+      font-size:16px;
+      margin-top:4px;
+      line-height:1.2;
+      word-break:break-word;
+    }
+    .meta{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      font-size:15px;
+      color:rgba(255,255,255,0.9);
+    }
+    .meta-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .meta-row svg{ width:18px; height:18px; opacity:0.85; }
+    .stats{
+      margin-top:auto;
+      display:flex;
+      gap:18px;
+      font-weight:600;
+      font-size:16px;
+    }
+    .stats .num{ font-weight:700; font-size:18px; }
+    /* small responsive fit logic via transform scale set by script */
+    .scale-wrap{
+      width:100%;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+    }
+
+    /* subtle reflection at bottom */
+    .bottom-reflection{
+      position:absolute;
+      bottom:0;
+      left:0;
+      right:0;
+      height:40%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      pointer-events:none;
+      z-index:1;
+      border-radius:0 0 var(--radius) var(--radius);
+    }
+
+  </style>
+</head>
+<body>
+  <div id="card" class="frame" role="img" aria-label="Glass profile card">
+    <div class="inner scale-wrap" id="scaleContainer">
+      <div class="top">
+        <div class="avatar"><img id="avatarImg" src="" alt="profile picture" /></div>
+        <div class="name-wrap">
+          <div class="name"><span id="displayName">name</span><span id="verifiedSvg" style="display:none;" class="verified"></span></div>
+          <div class="username" id="username">@username</div>
+        </div>
+      </div>
+
+      <div class="bio" id="bio">bio line</div>
+
+      <div class="meta" id="meta">
+        <div class="meta-row"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 2v6"></path></svg><span id="website">website</span></div>
+        <div class="meta-row"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 2v6"></path></svg><span id="born">Born date</span></div>
+        <div class="meta-row"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 2v6"></path></svg><span id="joined">Joined date</span></div>
+        <div class="meta-row"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 2v6"></path></svg><span id="verifiedPhone">Verified phone number</span></div>
+      </div>
+
+      <div class="stats">
+        <div><span class="num" id="followingNum">0</span> <span style="opacity:.8">Following</span></div>
+        <div><span class="num" id="followersNum">0</span> <span style="opacity:.8">Followers</span></div>
+      </div>
+    </div>
+
+    <div class="bottom-reflection"></div>
+  </div>
+
+  <script>
+    // The renderer will set content via page.evaluate in Node script.
+    // For dynamic scaling the Node script will set data-scale on .scale-wrap, or set a CSS transform.
+  </script>
+</body>
+</html>

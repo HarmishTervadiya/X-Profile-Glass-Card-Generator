@@ -15,9 +15,21 @@ const SYSTEM_INSTRUCTION = `Create a hyper-realistic 3D glass profile card held 
 
 The card must exactly replicate the layout, proportions, and typography of the reference glass profile card — with pixel-perfect spacing, alignment, and icon positioning.
 
+Exclusions:
+❌ No banner image
+❌ No background or color fill from the X profile image inside the glass card
+❌ No “Follow”, “Edit Profile”, “Message”, “More Options”, or “Bell” icons
+❌ No justified or centered text.
+
+Text Direction & Flow:
+All text flows top-to-bottom and left-aligned.
+Maintain consistent left margin throughout.
+Each icon aligns perfectly on the same vertical axis (use grid alignment reference lines).
+Keep the entire card angled consistently — do not rotate inner text independently; it must follow the card’s plane.
+
 Profile Details (must be 100% accurate, no spelling or numerical mistakes):
 
-Profile Picture: Use the exact profile picture from the input X profile image.
+Profile Picture: Use the exact profile picture from the input X profile image & place it at Top-left corner of the card.
 Name: From the input X profile image
 Username: From the input X profile image
 Bio Line: From the input X profile image
@@ -31,7 +43,6 @@ Design Specifications:
 Use the same glowing translucent glass card design and corner proportions as the reference card.
 
 Text color: pure white (#FFFFFF), with correct hierarchy — bold name, lighter metadata.
-
 Include the verified badge beside the name if it has.
 Include Twitter/X-style icons for website, birth date, joined date, and verification — same design, size, and position as in the reference.
 Do not include the banner image from the X profile.

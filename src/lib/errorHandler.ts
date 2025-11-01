@@ -23,6 +23,10 @@ export const ErrorMessages = {
   NETWORK_ERROR: 'Network error. Please check your connection and try again.',
   MAINTENANCE_MODE: 'The service is currently under maintenance. Please check back later.',
   UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
+  PASTE_UNAVAILABLE: 'We\'re unable to process pasted files right now. Please upload your file manually or try again after a few minutes — our servers are currently busy.',
+  PASTE_PERMISSION_DENIED: 'Clipboard access was denied. Please check your browser permissions or use the upload button instead.',
+  PASTE_NOT_SUPPORTED: 'Paste is not supported in your browser. Please use the upload button to select your file.',
+  PASTE_GENERIC_ERROR: 'Unable to paste image. Please use the upload button to select your file manually.',
 };
 
 export function getErrorMessage(error: unknown): string {
@@ -31,13 +35,19 @@ export function getErrorMessage(error: unknown): string {
   }
   
   if (error instanceof Error) {
+    const errorMessage = error.message.toLowerCase();
+    
     // Check for specific error patterns
-    if (error.message.includes('network') || error.message.includes('fetch')) {
+    if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
       return ErrorMessages.NETWORK_ERROR;
     }
-    if (error.message.includes('API') || error.message.includes('401') || error.message.includes('403')) {
+    if (errorMessage.includes('api') || errorMessage.includes('401') || errorMessage.includes('403')) {
       return ErrorMessages.API_ERROR;
     }
+    if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('exceeded') || errorMessage.includes('429')) {
+      return ErrorMessages.RATE_LIMIT_EXCEEDED;
+    }
+    
     return error.message;
   }
   
@@ -51,4 +61,23 @@ export function handleError(error: unknown): { message: string; code?: string } 
   const code = error instanceof AppError ? error.code : undefined;
   
   return { message, code };
+}
+
+/**
+ * Handles clipboard paste errors with user-friendly messages
+ */
+export function handlePasteError(error: unknown): string {
+  console.error('Paste error:', error);
+  
+  const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+  
+  if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('exceeded') || errorMessage.includes('429')) {
+    return ErrorMessages.PASTE_UNAVAILABLE;
+  } else if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorMessage.includes('not allowed')) {
+    return ErrorMessages.PASTE_PERMISSION_DENIED;
+  } else if (errorMessage.includes('not supported') || errorMessage.includes('not available')) {
+    return ErrorMessages.PASTE_NOT_SUPPORTED;
+  } else {
+    return ErrorMessages.PASTE_GENERIC_ERROR;
+  }
 }
